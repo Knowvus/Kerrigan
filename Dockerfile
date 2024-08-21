@@ -18,16 +18,16 @@ FROM ubuntu:20.04
 RUN apt-get update && apt-get install -y ca-certificates curl && rm -rf /var/lib/apt/lists/*
 
 # Copy the built binary from the builder stage
-COPY --from=builder /usr/src/app/target/release/duke /usr/local/bin/duke
+COPY --from=builder /usr/src/app/target/release/kerrigan /usr/local/bin/kerrigan
 
 # Debugging steps to verify the binary
-RUN ls -la /usr/local/bin/duke
+RUN ls -la /usr/local/bin/kerrigan
 
 # Expose the port the application will run on
 EXPOSE 8080
 
 # Set the default command to run your application
-CMD ["duke"]
+CMD ["kerrigan"]
 
 # Health check to ensure the container is healthy
 HEALTHCHECK --interval=1m --timeout=10s --start-period=1m --retries=3 \

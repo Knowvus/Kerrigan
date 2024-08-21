@@ -72,8 +72,8 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/duke:latest
-            ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+            ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:latest
+            ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -87,9 +87,9 @@ jobs:
           password: ${{ secrets.KERRIGAN_ROOT_PASSWORD }}
           script: |
             set -x
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
-            docker stop duke || true
-            docker rm duke || true
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
+            docker stop kerrigan || true
+            docker rm kerrigan || true
 
             # Find an open port starting from 8080
             PORT=8080
@@ -98,18 +98,18 @@ jobs:
               PORT=$((PORT+1))
             done
 
-            echo "Starting Duke container on port $PORT..."
-            docker run -d -p $PORT:8080 --name duke -e RUST_BACKTRACE=full ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
+            echo "Starting kerrigan container on port $PORT..."
+            docker run -d -p $PORT:8080 --name kerrigan -e RUST_BACKTRACE=full ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
 
-            # Verify that the Duke container is running
+            # Verify that the Kerrigan container is running
             sleep 5
-            if [ $(docker ps -q -f name=duke) ]; then
-              echo "Duke container is running successfully on port $PORT."
-              docker logs duke
+            if [ $(docker ps -q -f name=kerrigan) ]; then
+              echo "kerrigan container is running successfully on port $PORT."
+              docker logs kerrigan
             else
-              echo "Duke container failed to start. Here are the logs:"
-              docker logs duke
+              echo "kerrigan container failed to start. Here are the logs:"
+              docker logs kerrigan
               echo "Container status:"
-              docker inspect duke
+              docker inspect kerrigan
               exit 1
 
