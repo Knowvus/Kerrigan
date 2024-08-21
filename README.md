@@ -1,111 +1,108 @@
-# Table of Contents
 
-- [LOCAL TESTING](#local-testing)
-- [NEXT STEP](#next-step)
-- [DIRECTORY STRUCTURE](#directory-structure)
-- [OPERATIONS](#operations)
+# Kerrigan - PostgreSQL Integration
 
-# STATUS
+## Table of Contents
+
+- [Overview](#overview)
+- [Deployment Status](#deployment-status)
+- [Storage](#storage)
+- [Credentials](#credentials)
+- [Migrations](#migrations)
+- [Containerization](#containerization)
+- [Deployment](#deployment)
+- [Project Setup](#project-setup)
+- [CI/CD](#ci-cd)
+- [Roadmap](#roadmap)
+
+## Overview
+
+This project integrates the Kerrigan PostgreSQL database with the Duke_rs server, now re-implemented in Rust. The project aims to set up user and task management with a Postgres database, managing migrations, and deploying to a DigitalOcean droplet.
+
+## Deployment Status
 
 [![Build and Deploy Docker Image](https://github.com/Knowvus/Duke_rs/actions/workflows/deploy.yml/badge.svg)](https://github.com/Knowvus/Duke_rs/actions/workflows/deploy.yml)
 
-# LOCAL TESTING
 
-    ```
-    Build Time: ~4 Mins
-    ```
+## Migrations
 
-1) **Run the Server Locally:**
-    ```
-    cargo clean
-    cargo build
-    cargo run
-    ```
+- **Migration Tool:** `sqlx` with Rust
 
-2) **Endpints:**
-    ```
-    - curl http://localhost:8080/create_user -d "mkaminski1337@gmail.com"
-    - curl http://localhost:8080/create_task -d "Reverse this String!"
-    - curl -f http://localhost:8080/health
-    - curl -f http://localhost:8080/docs
-    ```
-4) **Review Secrets:**
-    ```
-    infisical secrets --env=prod
-    ```
-    Other Environments
-    ```
-    staging
-    dev
-    ```
+## Containerization & Deployment
 
-5) **API Documentation**
-    ```
-    OpenAPI JSON: http://<your-droplet-ip>:8080/api-doc/openapi.json
-    Swagger UI: http://<your-droplet-ip>:8080/docs
-    ```
-    
-6) **Docker Commands**
+- **Docker Container Name:** `kerrigan`
+- **Container Name:** `kerrigan`
+- **Hosting:** DigitalOcean Droplet
+
+## Project Setup
+
+### 1) Create GitHub Repository
+   - Initialize a new repository on GitHub for the project.
+
+### 2) Create DigitalOcean Droplet
+   - Set up a new droplet on DigitalOcean and configure it to run the Rust application and Postgres database.
+
+### 3) Store SSH Keys
+   - Store SSH keys on both the DigitalOcean Droplet and GitHub repository secrets for secure communication.
+
+### 4) Initialize Rust Project
+   - Install Rust and Cargo on your development machine:
+     ```bash
+     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
      ```
-    docker ps -a
-    docker ps
-    docker inspect [service_name]
-    docker logs [service_name]
-    docker rm [container_id]
-    ls
-    ls -a
-    sudo lsof -i :8080
-    ```
-7) **Swagger**
-    ```
-    curl -LO https://github.com/swagger-api/swagger-ui/archive/refs/heads/master.zip
-    unzip master.zip
-    ```
----
+   - Create a new Rust project:
+     ```bash
+     cargo new kerrigan_rs
+     cd kerrigan_rs
+     ```
 
-# TECHNICAL RESOURCES
+### 5) Add `sqlx` and Configure Migrations
+   - Add `sqlx` and `tokio` to your `Cargo.toml`:
+     ```toml
+     [dependencies]
+     sqlx = { version = "0.5", features = ["runtime-tokio-rustls", "postgres", "migrate"] }
+     tokio = { version = "1", features = ["full"] }
+     warp = "0.3"
+     serde = { version = "1.0", features = ["derive"] }
+     serde_json = "1.0"
+     ```
+   - Configure database migrations:
+     ```bash
+     sqlx migrate add create_user_table
+     sqlx migrate run
+     ```
 
-## DIRECTORY STRUCTURE
+### 6) Set Up Docker
+   - Create a `Dockerfile` for the Rust server and Postgres database:
+     ```Dockerfile
+     FROM rust:1.70 as builder
+     WORKDIR /usr/src/app
+     COPY . .
+     RUN cargo install --path .
 
-```
-src/
-│
-├── main.rs              # Entry point of the application
-├── handlers/            # Directory for request handlers
-│   ├── mod.rs           # Module file for the handlers
-│   └── task.rs          # Task-related handler functions
-│   └── user.rs          # User-related handler functions
-├── schemas/             # Directory for schema definitions
-│   ├── mod.rs           # Module file for the schemas
-│   └── task.rs          # Schema for TaskBody
-├── routes/              # Directory for route definitions
-│   └── mod.rs           # Module file for routes
-└── apidoc/              # Directory for OpenAPI documentation
-    ├── mod.rs           # Module file for OpenAPI documentation
-    └── openapi.rs       # Defines the OpenAPI schema using utoipa
-```
+     FROM debian:buster-slim
+     COPY --from=builder /usr/local/cargo/bin/kerrigan_rs /usr/local/bin/kerrigan_rs
+     CMD ["kerrigan_rs"]
+     ```
+   - Build and run the Docker container:
+     ```bash
+     docker build -t kerrigan .
+     docker run -p 8000:8000 kerrigan
+     ```
 
-## OPERATIONS
+## Roadmap
 
-### `src/routes/`
+### Registration Process
 
-**Purpose:** This folder contains all the route handlers that map API endpoints to their respective request handlers.
+- **Step 1:** User enters email address and clicks "Register"
+- **Step 2:** Check for duplicate email
+- **Step 3:** If email is not duplicate, create a new user
+- **Step 4:** Send confirmation email with a link
+- **Step 5:** User clicks the confirmation link and is registered
 
-**Example:** `mod.rs` defines the route handling logic and integrates the handlers for `create_task` and `create_user`.
+### Milestones
 
-### `src/schemas/`
-
-**Purpose:** This folder contains schema definitions used in your application and OpenAPI documentation.
-
-**Example:** `task.rs` defines the `TaskBody` struct, which is used in the `create_task` handler and referenced in the OpenAPI documentation.
-
-### `src/apidoc/`
-
-**Purpose:** This folder is dedicated to OpenAPI documentation-related logic.
-
-- **`mod.rs:`** This file exposes the OpenAPI documentation logic.
-- **`openapi.rs:`** This file defines your OpenAPI schema using `utoipa`, pulling in schemas from the `schemas/` directory and paths from the `routes/` and `handlers/` directories to build the complete OpenAPI documentation.
-
-### `src/utils/`
-
-**Purpose:** This folder can store utility functions or modules that are shared across different parts of your application (e.g., error handling, logging, etc.).
+- [ ] Create User Table in Postgres
+- [ ] Create Task Table in Postgres
+- [ ] Implement User Registration Endpoint
+- [ ] Implement Task Creation Endpoint
+- [ ] Add Unit, Integration, and E2E testing
