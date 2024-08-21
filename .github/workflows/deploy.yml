@@ -90,17 +90,24 @@ jobs:
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
             docker stop kerrigan || true
             docker rm kerrigan || true
-
+      
             # Find an open port starting from 8080
             PORT=8080
             while lsof -i :$PORT; do
               echo "Port $PORT is in use, trying the next one..."
               PORT=$((PORT+1))
             done
-
+      
             echo "Starting kerrigan container on port $PORT..."
-            docker run -d -p $PORT:8080 --name kerrigan -e RUST_BACKTRACE=full ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
-
+            docker run -d -p $PORT:8080 --name kerrigan \
+              -e RUST_BACKTRACE=full \
+              -e PG_USER=${{ secrets.PG_USER }} \
+              -e PG_PASSWORD=${{ secrets.PG_PASSWORD }} \
+              -e PG_DATABASE=${{ secrets.PG_DATABASE }} \
+              -e PG_HOST=${{ secrets.PG_HOST }} \
+              -e PG_PORT=${{ secrets.PG_PORT }} \
+              ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
+      
             # Verify that the Kerrigan container is running
             sleep 5
             if [ $(docker ps -q -f name=kerrigan) ]; then
@@ -113,3 +120,4 @@ jobs:
               docker inspect kerrigan
               exit 1
             fi
+      
