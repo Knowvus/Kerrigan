@@ -1,5 +1,5 @@
 [package]
-name = "duke"
+name = "kerrigan"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,5 +9,5 @@ tokio-postgres = "0.7"
 dotenv = "0.15"
 
 [[bin]]
-name = "duke"
+name = "kerrigan"
 path = "src/main.rs"

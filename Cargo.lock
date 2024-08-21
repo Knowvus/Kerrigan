@@ -140,15 +140,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
-name = "duke"
-version = "0.1.0"
-dependencies = [
- "dotenv",
- "tokio",
- "tokio-postgres",
-]
-
-[[package]]
 name = "fallible-iterator"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -257,6 +248,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1868808506b929d7b0cfa8f75951347aa71bb21144b7791bae35d9bccfcfe37a"
 dependencies = [
  "wasm-bindgen",
+]
+
+[[package]]
+name = "kerrigan"
+version = "0.1.0"
+dependencies = [
+ "dotenv",
+ "tokio",
+ "tokio-postgres",
 ]
 
 [[package]]
