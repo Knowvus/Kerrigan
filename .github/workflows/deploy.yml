@@ -112,4 +112,4 @@ jobs:
               echo "Container status:"
               docker inspect kerrigan
               exit 1
-
+            fi
