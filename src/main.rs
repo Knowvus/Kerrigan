@@ -1,16 +1,9 @@
 use tokio_postgres::{NoTls, Error};
 use std::env;
 use dotenv::dotenv;
-mod logging {
-    include!("../logging/mod.rs");
-}
-
-use logging::{init_logging, log_info, log_warn, log_error};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    init_logging();
-    log_info("Application has started");
     
     dotenv().ok();
 
