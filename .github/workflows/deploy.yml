@@ -8,14 +8,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:latest
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
+          POSTGRES_USER: ${{ secrets.PG_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.PG_DATABASE }}
         ports:
           - 5432:5432
         options: >-
@@ -23,7 +23,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -51,7 +51,7 @@ jobs:
 
       - name: Run tests
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/test_db
+          DATABASE_URL: postgres://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@localhost:5432/${{ secrets.PG_DATABASE }}
         uses: actions-rs/cargo@v1
         with:
           command: test
@@ -90,24 +90,24 @@ jobs:
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
             docker stop kerrigan || true
             docker rm kerrigan || true
-      
+
             # Find an open port starting from 8080
             PORT=8080
             while lsof -i :$PORT; do
               echo "Port $PORT is in use, trying the next one..."
               PORT=$((PORT+1))
             done
-      
+
             echo "Starting kerrigan container on port $PORT..."
             docker run -d -p $PORT:8080 --name kerrigan \
               -e RUST_BACKTRACE=full \
               -e PG_USER=${{ secrets.PG_USER }} \
               -e PG_PASSWORD=${{ secrets.PG_PASSWORD }} \
               -e PG_DATABASE=${{ secrets.PG_DATABASE }} \
-              -e PG_HOST=${{ secrets.PG_HOST }} \
+              -e PG_HOST=localhost \
               -e PG_PORT=${{ secrets.PG_PORT }} \
               ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
-      
+
             # Verify that the Kerrigan container is running
             sleep 5
             if [ $(docker ps -q -f name=kerrigan) ]; then
@@ -119,5 +119,3 @@ jobs:
               echo "Container status:"
               docker inspect kerrigan
               exit 1
-            fi
-      
