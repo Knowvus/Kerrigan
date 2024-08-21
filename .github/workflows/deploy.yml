@@ -86,6 +86,7 @@ jobs:
           username: root
           password: ${{ secrets.KERRIGAN_ROOT_PASSWORD }}
           script: |
+            set -x
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/duke:${{ github.sha }}
             docker stop duke || true
             docker rm duke || true
@@ -111,3 +112,4 @@ jobs:
               echo "Container status:"
               docker inspect duke
               exit 1
+
