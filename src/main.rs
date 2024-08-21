@@ -1,42 +1,39 @@
-mod routes;
-mod handlers;
-
-use routes::create_routes;
+use tokio_postgres::{NoTls, Error};
 use std::env;
-use std::net::SocketAddr;
-use tracing::info;
-use tracing_subscriber::EnvFilter;
-use tracing_subscriber::fmt::SubscriberBuilder;
-use tracing_appender::rolling::{RollingFileAppender, Rotation};
+use dotenv::dotenv;
 
 #[tokio::main]
-async fn main() {
-    // Create a rolling file appender
-    let file_appender = RollingFileAppender::new(Rotation::DAILY, "logs", "app.log");
-    let (_non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+async fn main() -> Result<(), Error> {
+    dotenv().ok();
 
-    // Initialize tracing subscriber with the file appender
-    let subscriber = SubscriberBuilder::default()
-        .with_env_filter(EnvFilter::from_default_env())
-        .finish();
+    // Load environment variables
+    let db_user = env::var("PG_USER").expect("PG_USER must be set");
+    let db_password = env::var("PG_PASSWORD").expect("PG_PASSWORD must be set");
+    let db_name = env::var("PG_DATABASE").expect("PG_DATABASE must be set");
+    let db_host = env::var("PG_HOST").unwrap_or("localhost".to_string());
+    let db_port = env::var("PG_PORT").unwrap_or("5432".to_string());
 
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    let connection_string = format!(
+        "host={} port={} user={} password={} dbname={}",
+        db_host, db_port, db_user, db_password, db_name
+    );
 
-    info!("Starting the application...");
+    // Connect to the PostgreSQL database
+    let (_client, connection) =
+        tokio_postgres::connect(&connection_string, NoTls).await?;
 
-    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
-    let addr: SocketAddr = format!("0.0.0.0:{}", port).parse().expect("Invalid address");
+    // The connection object performs the actual communication with the database,
+    // so spawn it off to run on its own.
+    tokio::spawn(async move {
+        if let Err(e) = connection.await {
+            eprintln!("connection error: {}", e);
+        }
+    });
 
-    let routes = create_routes();
-    
-    warp::serve(routes).run(addr).await;
+    println!("Successfully connected to PostgreSQL database!");
 
-    info!("Starting server on {}", addr);
-
-    // // Run the server
-    // if let Err(e) = warp::serve(all_routes).run(addr).await {
-    //     error!("Server error: {}", e);
-    // }
-
-    info!("Server has exited.");
+    // Keeping the server running to maintain the connection
+    loop {
+        tokio::time::sleep(tokio::time::Duration::from_secs(3600)).await;
+    }
 }
