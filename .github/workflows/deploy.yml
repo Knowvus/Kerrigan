@@ -21,17 +21,17 @@ jobs:
             # Create a Docker network (if needed)
             docker network create app_network || true
 
-            # Deploy PostgreSQL container
+            # Deploy PostgreSQL container on a different port (5433)
             docker run --name postgres-container --network app_network \
               -e POSTGRES_USER="${{ secrets.PG_USER }}" \
               -e POSTGRES_PASSWORD="${{ secrets.PG_PASSWORD }}" \
               -e POSTGRES_DB="${{ secrets.PG_DATABASE }}" \
-              -p 5432:5432 -d postgres:latest
+              -p 5433:5432 -d postgres:latest
 
             # Verify that the PostgreSQL container is running
             sleep 5
             if [ $(docker ps -q -f name=postgres-container) ]; then
-              echo "PostgreSQL container is running successfully."
+              echo "PostgreSQL container is running successfully on port 5433."
               docker logs postgres-container
             else
               echo "PostgreSQL container failed to start. Here are the logs:"
