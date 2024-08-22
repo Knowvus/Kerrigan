@@ -22,6 +22,23 @@ This project integrates the Kerrigan PostgreSQL database with the Duke_rs server
 
 [![Build and Deploy Docker Image](https://github.com/Knowvus/Duke_rs/actions/workflows/deploy.yml/badge.svg)](https://github.com/Knowvus/Duke_rs/actions/workflows/deploy.yml)
 
+## Roadmap
+
+### Registration Process
+
+- **Step 1:** User enters email address and clicks "Register"
+- **Step 2:** Check for duplicate email
+- **Step 3:** If email is not duplicate, create a new user
+- **Step 4:** Send confirmation email with a link
+- **Step 5:** User clicks the confirmation link and is registered
+
+### Milestones
+
+- [x] Create User Table in Postgres
+- [x] Create Task Table in Postgres
+- [ ] Implement User Registration Endpoint
+- [ ] Implement Task Creation Endpoint
+- [ ] Add Unit, Integration, and E2E testing
 
 ## Migrations
 
@@ -68,21 +85,3 @@ diesel migration run
      cargo new kerrigan_rs
      cd kerrigan_rs
      ```
-
-## Roadmap
-
-### Registration Process
-
-- **Step 1:** User enters email address and clicks "Register"
-- **Step 2:** Check for duplicate email
-- **Step 3:** If email is not duplicate, create a new user
-- **Step 4:** Send confirmation email with a link
-- **Step 5:** User clicks the confirmation link and is registered
-
-### Milestones
-
-- [ ] Create User Table in Postgres
-- [ ] Create Task Table in Postgres
-- [ ] Implement User Registration Endpoint
-- [ ] Implement Task Creation Endpoint
-- [ ] Add Unit, Integration, and E2E testing
