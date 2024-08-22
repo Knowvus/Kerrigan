@@ -30,13 +30,13 @@ jobs:
 
             # Verify that the PostgreSQL container is running
             sleep 5
-            if [ $(docker ps -q -f name=postgres-container) ]; then
+            if [ $(docker ps -q -f name=kerrigan) ]; then
               echo "PostgreSQL container is running successfully on port 5433."
-              docker logs postgres-container
+              docker logs kerrigan
             else
               echo "PostgreSQL container failed to start. Here are the logs:"
-              docker logs postgres-container
+              docker logs kerrigan
               echo "Container status:"
-              docker inspect postgres-container
+              docker inspect kerrigan
               exit 1
             fi
