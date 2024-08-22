@@ -1,4 +1,4 @@
-name: Build and Deploy Docker Image
+name: Deploy PostgreSQL
 
 on:
   push:
@@ -6,80 +6,10 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:latest
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-
-      - name: Cache dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Build project
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release
-
-      - name: Run tests
-        env:
-          DATABASE_URL: postgres://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@localhost:5432/${{ secrets.PG_DATABASE }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --release
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:latest
-            ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
-
   deploy:
     runs-on: ubuntu-latest
-    needs: build
     steps:
-      - name: Deploy to DigitalOcean Droplet
+      - name: Deploy PostgreSQL to DigitalOcean Droplet
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.DIGITALOCEAN_KERRIGAN_DROPLET_IP }}
@@ -88,40 +18,25 @@ jobs:
           script: |
             set -x
 
-            # Ensure PostgreSQL is installed and running (if necessary)
-            apt-get update && apt-get install -y postgresql-client
-            pg_isready -h localhost -U ${{ secrets.PG_USER }} || (echo "PostgreSQL is not ready, please check the service." && exit 1)
+            # Create a Docker network (if needed)
+            docker network create app_network || true
 
-            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
-            docker stop kerrigan || true
-            docker rm kerrigan || true
+            # Deploy PostgreSQL container
+            docker run --name postgres-container --network app_network \
+              -e POSTGRES_USER="${{ secrets.PG_USER }}" \
+              -e POSTGRES_PASSWORD="${{ secrets.PG_PASSWORD }}" \
+              -e POSTGRES_DB="${{ secrets.PG_DATABASE }}" \
+              -p 5432:5432 -d postgres:latest
 
-            # Find an open port starting from 8080
-            PORT=8080
-            while lsof -i :$PORT; do
-              echo "Port $PORT is in use, trying the next one..."
-              PORT=$((PORT+1))
-            done
-
-            echo "Starting kerrigan container on port $PORT..."
-            docker run -d -p $PORT:8080 --name kerrigan \
-              -e RUST_BACKTRACE=full \
-              -e PG_USER=${{ secrets.PG_USER }} \
-              -e PG_PASSWORD=${{ secrets.PG_PASSWORD }} \
-              -e PG_DATABASE=${{ secrets.PG_DATABASE }} \
-              -e PG_HOST=localhost \
-              -e PG_PORT=${{ secrets.PG_PORT }} \
-              ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
-
-            # Verify that the Kerrigan container is running
+            # Verify that the PostgreSQL container is running
             sleep 5
-            if [ $(docker ps -q -f name=kerrigan) ]; then
-              echo "kerrigan container is running successfully on port $PORT."
-              docker logs kerrigan
+            if [ $(docker ps -q -f name=postgres-container) ]; then
+              echo "PostgreSQL container is running successfully."
+              docker logs postgres-container
             else
-              echo "kerrigan container failed to start. Here are the logs:"
-              docker logs kerrigan
+              echo "PostgreSQL container failed to start. Here are the logs:"
+              docker logs postgres-container
               echo "Container status:"
-              docker inspect kerrigan
+              docker inspect postgres-container
               exit 1
             fi
