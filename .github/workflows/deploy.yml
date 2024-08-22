@@ -13,9 +13,9 @@ jobs:
       postgres:
         image: postgres:latest
         env:
-          POSTGRES_USER: ${{ secrets.PG_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.PG_DATABASE }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: testdb
         ports:
           - 5432:5432
         options: >-
@@ -87,6 +87,11 @@ jobs:
           password: ${{ secrets.KERRIGAN_ROOT_PASSWORD }}
           script: |
             set -x
+
+            # Ensure PostgreSQL is installed and running (if necessary)
+            apt-get update && apt-get install -y postgresql-client
+            pg_isready -h localhost -U ${{ secrets.PG_USER }} || (echo "PostgreSQL is not ready, please check the service." && exit 1)
+
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/kerrigan:${{ github.sha }}
             docker stop kerrigan || true
             docker rm kerrigan || true
