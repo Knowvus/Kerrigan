@@ -1,0 +1,6 @@
+[dependencies]
+diesel = { version = "2.0", features = ["postgres"] }
+dotenv = "0.15"
+
+[dependencies.diesel_migrations]
+version = "2.0"

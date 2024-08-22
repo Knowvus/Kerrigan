@@ -25,7 +25,21 @@ This project integrates the Kerrigan PostgreSQL database with the Duke_rs server
 
 ## Migrations
 
-- **Migration Tool:** `sqlx` with Rust
+- **Migration Tool:** `diesel` with Rust
+```
+Samples
+@ = %40
+name@gmail.com = name%40gmail.com
+
+export PG_USER=email@domain.com
+export PG_PASSWORD=password
+export PG_HOST=ip_address
+export PG_PORT=port
+export PG_DATABASE=db_name
+
+export DATABASE_URL=postgres://$PG_USER:$PG_PASSWORD@$PG_HOST:$PG_PORT/$PG_DATABASE
+diesel migration run
+```
 
 ## Containerization & Deployment
 
@@ -53,40 +67,6 @@ This project integrates the Kerrigan PostgreSQL database with the Duke_rs server
      ```bash
      cargo new kerrigan_rs
      cd kerrigan_rs
-     ```
-
-### 5) Add `sqlx` and Configure Migrations
-   - Add `sqlx` and `tokio` to your `Cargo.toml`:
-     ```toml
-     [dependencies]
-     sqlx = { version = "0.5", features = ["runtime-tokio-rustls", "postgres", "migrate"] }
-     tokio = { version = "1", features = ["full"] }
-     warp = "0.3"
-     serde = { version = "1.0", features = ["derive"] }
-     serde_json = "1.0"
-     ```
-   - Configure database migrations:
-     ```bash
-     sqlx migrate add create_user_table
-     sqlx migrate run
-     ```
-
-### 6) Set Up Docker
-   - Create a `Dockerfile` for the Rust server and Postgres database:
-     ```Dockerfile
-     FROM rust:1.70 as builder
-     WORKDIR /usr/src/app
-     COPY . .
-     RUN cargo install --path .
-
-     FROM debian:buster-slim
-     COPY --from=builder /usr/local/cargo/bin/kerrigan_rs /usr/local/bin/kerrigan_rs
-     CMD ["kerrigan_rs"]
-     ```
-   - Build and run the Docker container:
-     ```bash
-     docker build -t kerrigan .
-     docker run -p 8000:8000 kerrigan
      ```
 
 ## Roadmap

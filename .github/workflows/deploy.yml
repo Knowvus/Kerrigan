@@ -9,6 +9,19 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Install Diesel CLI
+        run: cargo install diesel_cli --no-default-features --features postgres
+
       - name: Deploy PostgreSQL to DigitalOcean Droplet
         uses: appleboy/ssh-action@master
         with:
@@ -39,4 +52,8 @@ jobs:
               echo "Container status:"
               docker inspect kerrigan
               exit 1
-            fi
+
+      - name: Run Diesel Migrations
+        env:
+          DATABASE_URL: postgres://${{ secrets.PG_USER }}:${{ secrets.PG_PASSWORD }}@${{ secrets.PG_HOST }}:${{ secrets.PG_PORT }}/${{ secrets.PG_DATABASE }}
+        run: diesel migration run
