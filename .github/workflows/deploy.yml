@@ -37,30 +37,36 @@ jobs:
             # Create a Docker volume (if needed)
             docker volume create pgdata || true
 
-            # Remove existing container if it exists
-            if docker ps -a --format '{{.Names}}' | grep -Eq "^kerrigan\$"; then
-              docker rm -f kerrigan
-            fi
-
-            # Deploy PostgreSQL container with volume
-            docker run --name kerrigan --network app_network \
-              -e POSTGRES_USER="${{ secrets.PG_USER }}" \
-              -e POSTGRES_PASSWORD="${{ secrets.PG_PASSWORD }}" \
-              -e POSTGRES_DB="${{ secrets.PG_DATABASE }}" \
-              -v pgdata:/var/lib/postgresql/data \
-              -p 5433:5432 -d postgres:latest
-
-            # Verify that the PostgreSQL container is running
-            sleep 5
-            if [ $(docker ps -q -f name=kerrigan) ]; then
-              echo "PostgreSQL container is running successfully on port 5433."
-              docker logs kerrigan
+            # Check if the PostgreSQL container is running
+            if docker ps -q -f name=kerrigan; then
+              echo "PostgreSQL container is already running. Skipping deployment."
             else
-              echo "PostgreSQL container failed to start. Here are the logs:"
-              docker logs kerrigan
-              echo "Container status:"
-              docker inspect kerrigan
-              exit 1
+              # Remove existing container if it exists but not running
+              if docker ps -a --format '{{.Names}}' | grep -Eq "^kerrigan\$"; then
+                docker rm -f kerrigan
+              fi
+
+              # Deploy PostgreSQL container with volume
+              docker run --name kerrigan --network app_network \
+                -e POSTGRES_USER="${{ secrets.PG_USER }}" \
+                -e POSTGRES_PASSWORD="${{ secrets.PG_PASSWORD }}" \
+                -e POSTGRES_DB="${{ secrets.PG_DATABASE }}" \
+                -v pgdata:/var/lib/postgresql/data \
+                -p 5433:5432 -d postgres:latest
+
+              # Verify that the PostgreSQL container is running
+              sleep 5
+              if [ $(docker ps -q -f name=kerrigan) ]; then
+                echo "PostgreSQL container is running successfully on port 5433."
+                docker logs kerrigan
+              else
+                echo "PostgreSQL container failed to start. Here are the logs:"
+                docker logs kerrigan
+                echo "Container status:"
+                docker inspect kerrigan
+                exit 1
+              fi
+            fi
 
       - name: Run Diesel Migrations
         env:
