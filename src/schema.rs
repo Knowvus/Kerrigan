@@ -1,7 +1,7 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    tasks (id) {
+    framework_tasks (id) {
         id -> Int4,
         name -> Varchar,
         description -> Nullable<Text>,
@@ -18,9 +18,9 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(tasks -> user_users (created_by));
+diesel::joinable!(framework_tasks -> user_users (created_by));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    tasks,
+    framework_tasks,
     user_users,
 );

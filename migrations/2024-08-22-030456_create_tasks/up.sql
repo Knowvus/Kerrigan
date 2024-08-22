@@ -1,5 +1,5 @@
 -- migrations/<timestamp>_create_tasks/up.sql
-CREATE TABLE tasks (
+CREATE TABLE framework_tasks (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     description TEXT,
