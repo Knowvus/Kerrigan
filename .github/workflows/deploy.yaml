@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy Service as Docker Swarm Member
-        uses: <your-org-or-username>/deploy-actions-repo/.github/actions/deploy-service/member@main
+        uses: Knowvus/.github/actions/deploy-service/member@main
         with:
           docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           docker_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
