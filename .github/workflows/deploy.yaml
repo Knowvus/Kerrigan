@@ -1,0 +1,26 @@
+name: Deploy Docker Swarm Member Service
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash  # Set the default shell for all run steps
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Service as Docker Swarm Member
+        uses: <your-org-or-username>/deploy-actions-repo/.github/actions/deploy-service/member@main
+        with:
+          docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          docker_image: postgres:latest  # Example for deploying PostgreSQL
+          infisical_client_id: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
+          infisical_client_secret: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
+          manager_ip: ${{ secrets.DO_DUKE_IP }}
+          project_id: ${{ secrets.PROJECT_ID }}
+          pg_user: ${{ secrets.PG_USER }}
+          pg_password: ${{ secrets.PG_PASSWORD }}
+          pg_database: ${{ secrets.PG_DATABASE }}
