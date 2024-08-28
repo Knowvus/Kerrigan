@@ -16,7 +16,7 @@ jobs:
         with:
           docker_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           docker_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          docker_image: postgres:latest  # Example for deploying PostgreSQL
+          docker_image: postgres:latest
           infisical_client_id: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_ID }}
           infisical_client_secret: ${{ secrets.INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET }}
           manager_ip: ${{ secrets.DO_DUKE_IP }}
